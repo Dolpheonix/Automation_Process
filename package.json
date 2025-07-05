@@ -1,17 +1,43 @@
 {
-  "name": "batch-custom",
+  "name": "Automation-Process",
   "version": "1.0.0",
-  "description": "",
+  "description": "개발 업무 자동화를 위한 배치 프로세스 모음",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron app.js"
+    "start": "electron app.js",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.example.AutomationProcess",
+    "productName": "Automation Process",
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Automation Process"
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "dependencies": {
-    "electron": "^37.2.0"
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
   }
 }

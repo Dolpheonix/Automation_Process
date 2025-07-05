@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs');
-const configPath = path.join(__dirname, 'config.json');
+const configPath = path.join(app.getPath('userData'), 'config.json');
 
 function loadConfig() {
   try {
@@ -29,7 +29,7 @@ function createWindow() {
     }
   });
 
-  win.loadFile('index.html');
+  win.loadFile('./renderer/index.html');
 }
 
 app.whenReady().then(() => {

@@ -1,7 +1,7 @@
-# 🛠 Git Puller 사용방법
+# 🛠 Automation Process 사용방법
 
-Node.js 기반 폴더별 Git Pull 자동화 데스크톱 앱입니다.  
-지정한 폴더들의 `git pull`을 실행하고, 결과를 상태 아이콘 및 로그로 표시합니다.
+Node.js 기반 자동화 데스크톱 앱입니다.  
+> Git Puller : 지정한 폴더들의 `git pull`을 실행하고, 결과를 상태 아이콘 및 로그로 표시합니다.
 
 ---
 
@@ -25,13 +25,9 @@ Node.js 기반 폴더별 Git Pull 자동화 데스크톱 앱입니다.
 ```bash
 npm install
 ```
-> electron
----
-
-### 3. 앱 실행
 
 ```bash
-npm start
+npm run dist
 ```
 
 > 실행 시 지정한 폴더들의 목록과 `Git Pull` 버튼이 표시됩니다.
