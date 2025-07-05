@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Puller</title>
+  <style>
+    .folder-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        font-size: 12px;
+        height: 10px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .folder-path {
+        flex-grow: 1;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .content-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
+    .button-container {
+        display: flex;
+        gap: 10px;
+        background-color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-button {
+        background-color: #3498db;
+        border: none;
+        color: white;
+        font-size: 16px;
+        padding: 10px 20px;
+        margin-right: 10px;
+        cursor: pointer;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    /* Hover 효과 */
+    .main-button:hover {
+        background-color: #2980b9;
+        transform: translateY(-1px);
+    }
+
+    /* 버튼 기본 스타일 제거 및 공통 설정 */
+    .action-button {
+        background: none;
+        border: none;
+        font-size: 15px;
+        cursor: pointer;
+        padding: 6px;
+        margin-left: 8px;
+        border-radius: 6px;
+        transition: background 0.2s ease;
+    }
+
+    /* Hover 효과 */
+    .action-button:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    /* 상태 아이콘과 버튼 사이 간격 */
+    .status-icon {
+        font-size: 15px;
+        margin-left: 10px;
+        margin-right: 6px; /* 여백 추가 */
+    }
+
+    #output {
+        margin-top: 20px;
+        white-space: pre-wrap;
+        background-color: #222;
+        color: #eee;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 12px;
+        height: 700px;
+        overflow-y: auto;
+    }
+    </style>
+</head>
+<body>
+    <div class="content-container">
+        <h1>Puller</h1>
+
+        <div class="button-container">
+            <button id="add" class="main-button">➕ 폴더 추가</button>
+            <button id="pull" class="main-button">🔁 전체 Pull</button>
+        </div>
+
+        <ul id="folder-list"></ul>
+
+        <div id="output"></div>
+    </div>
+    <script>
+        const listEl = document.getElementById('folder-list');
+        const outputEl = document.getElementById('output');
+
+        let folderStatuses = {};
+
+        async function renderList() {
+            const folders = await window.api.getFolders();
+            listEl.innerHTML = '';
+            for (const folder of folders) {
+            const li = document.createElement('li');
+            li.className = 'folder-item';
+
+            const pathSpan = document.createElement('span');
+            pathSpan.className = 'folder-path';
+            pathSpan.textContent = folder;
+
+            const statusSpan = document.createElement('span');
+            statusSpan.className = 'status-icon';
+            const status = folderStatuses[folder];
+            if (status === 'loading') {
+                statusSpan.textContent = '⏳';
+            } else if (status === 'success') {
+                statusSpan.textContent = '✅';
+            } else if (status === 'fail') {
+                statusSpan.textContent = '❌';
+            } else {
+                statusSpan.textContent = '';
+            }
+
+            // 🔄 개별 실행 버튼
+            const pullBtn = document.createElement('button');
+            pullBtn.className = 'action-button';
+            pullBtn.textContent = '🔄';
+            pullBtn.onclick = async () => {
+                folderStatuses[folder] = 'loading';
+                renderList();
+
+                const result = await window.api.gitPullOne(folder);
+                folderStatuses[folder] = result.success ? 'success' : 'fail';
+                renderList();
+
+                outputEl.textContent += `📁 ${folder}\n${result.output}\n\n`;
+            };
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'action-button';
+            delBtn.textContent = '🗑️';
+            delBtn.onclick = async () => {
+                await window.api.removeFolder(folder);
+                delete folderStatuses[folder];
+                renderList();
+            };
+
+            li.appendChild(pathSpan);
+            li.appendChild(statusSpan);
+            li.appendChild(pullBtn);
+            li.appendChild(delBtn);
+            listEl.appendChild(li);
+            }
+        }
+
+        document.getElementById('add').onclick = async () => {
+            await window.api.addFolder();
+            renderList();
+        };
+
+        document.getElementById('pull').onclick = async () => {
+            const folders = await window.api.getFolders();
+            outputEl.textContent = '';
+
+            for (const folder of folders) {
+            folderStatuses[folder] = 'loading';
+            renderList();
+
+            const result = await window.api.gitPullOne(folder);
+
+            folderStatuses[folder] = result.success ? 'success' : 'fail';
+            renderList();
+
+            outputEl.textContent += `📁 ${folder}\n${result.output}\n\n`;
+            }
+        };
+
+        renderList();
+    </script>
+</body>
+</html>
