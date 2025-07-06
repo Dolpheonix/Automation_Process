@@ -11,27 +11,15 @@ Node.js 기반의 Git 자동화 데스크톱 애플리케이션입니다.
 
 ## 📦 설치 및 실행
 
-### 1. `config.json` 생성
-
-```json
-{
-  "folders": [
-    "C:\\Users\\user\\Type\\Your\\Folder"
-  ]
-}
-```
-
-* 앱 실행 시 해당 폴더 목록을 자동으로 로드합니다.
-
-### 2. 앱 설치 및 빌드
-
 ```bash
 npm install
 npm run dist
 ```
 
 * 빌드 후 실행 파일이 `dist/` 폴더에 생성됩니다.
-
+### 실행 방법
+* dev : `npm start`로 실행. `config.json`에 폴더 목록이 저장됨
+* Desktop App : `dist/` 내의 installer를 통해 앱을 설치해서 사용할 수도 있습니다.
 ---
 
 ## 🧩 주요 기능
