@@ -300,11 +300,11 @@
 
                 const image = document.createElement('img');
                 if (repo.type === 'python') {
-                    image.src = '../assets/python.png';
+                    image.src = await window.getAssetPath.get('python.png');
                 } else if (repo.type === 'node') {
-                    image.src = '../assets/nodejs.png';
+                    image.src = await window.getAssetPath.get('nodejs.png');
                 } else {
-                    image.src = '../assets/unknown.png';
+                    image.src = await window.getAssetPath.get('unknown.png');
                 }
 
                 const delBtn = document.createElement('button');

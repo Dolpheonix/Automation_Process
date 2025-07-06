@@ -12,3 +12,7 @@ contextBridge.exposeInMainWorld('pkgapi', {
     detectAll: () => ipcRenderer.invoke('detect-packages'),
     checkLatestPackage: (type, name) => ipcRenderer.invoke('check-latest-package', type, name),
 });
+
+contextBridge.exposeInMainWorld('getAssetPath', {
+    get: (assetName) => ipcRenderer.invoke('get-asset-path', assetName)
+});

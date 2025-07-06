@@ -6,7 +6,7 @@ const fs = require('fs');
 
 // 개발/배포 환경 구분
 const configPath = app.isPackaged ? path.join(app.getPath('userData'), 'config.json') : path.join(process.cwd(), 'config.json');
-
+const resourcePath = app.isPackaged ? path.join(process.resourcesPath, 'assets') : path.join(process.cwd(), 'assets');
 const loadConfig = () => {
   try {
     return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
@@ -103,6 +103,10 @@ app.whenReady().then(() => {
     });
 
     ipcMain.handle('check-latest-package', async (event, type, name) => checkLatestPackage(type, name));
+
+    ipcMain.handle('get-asset-path', (event, assetName) => {
+      return path.join(resourcePath, assetName);
+    });
 });
 
 app.on('window-all-closed', () => {
