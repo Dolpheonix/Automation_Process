@@ -7,3 +7,8 @@ contextBridge.exposeInMainWorld('api', {
     gitPullAll: () => ipcRenderer.invoke('git-pull-all'),
     gitPullOne: (folder) => ipcRenderer.invoke('git-pull-one', folder)
 });
+
+contextBridge.exposeInMainWorld('pkgapi', {
+    detectAll: () => ipcRenderer.invoke('detect-packages'),
+    checkLatestPackage: (type, name) => ipcRenderer.invoke('check-latest-package', type, name),
+});

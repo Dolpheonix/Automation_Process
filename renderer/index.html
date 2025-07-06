@@ -2,8 +2,35 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Puller</title>
+  <title>Automation</title>
   <style>
+      .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .tab-buttons {
+        display: flex;
+        gap: 10px;
+        margin: 20px;
+    }
+
+    .tab-btn {
+        padding: 10px 20px;
+        border: none;
+        background-color: #eee;
+        cursor: pointer;
+        border-radius: 6px;
+    }
+
+    .tab-btn.active {
+        background-color: #3498db;
+        color: white;
+        font-weight: bold;
+    }
     .folder-item {
         display: flex;
         justify-content: space-between;
@@ -12,7 +39,7 @@
         border: 1px solid #ccc;
         border-radius: 10px;
         padding: 10px 15px;
-        margin-bottom: 10px;
+        margin-bottom: 0px;
         font-size: 12px;
         height: 10px;
         box-shadow: 0 1px 4px rgba(0,0,0,0.1);
@@ -24,6 +51,71 @@
         white-space: nowrap;
     }
 
+    .package-item {
+        display: flex;
+        flex-direction: column; /* 추가: 세로 정렬 */
+        align-items: flex-start; /* 추가: 왼쪽 정렬 */
+        justify-content: flex-start; /* 추가: 위쪽 정렬 */
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        font-size: 12px;
+        max-height: 120px;
+        overflow-y: auto;
+        margin: 0px;
+        padding: 10px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .package-info {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between; /* 좌우 끝 정렬 */
+        font-size: 16px;
+        width: 100%;
+        margin-bottom: 10px;
+        gap: 12px;
+    }
+
+    .package-info img {
+        height: 24px;
+        width: 24px;         /* 크기 고정 */
+        object-fit: contain; /* 비율 유지하며 맞춤 */
+        margin-right: 8px;   /* 버튼과 간격 */
+    }
+
+    .package-list li {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: 12px;
+        font-size: 13px;
+        min-height: 36px;
+        /* 필요하다면 아래도 추가 */
+        /* justify-content: flex-start; */
+    }
+
+    .package-list .pkg-name {
+        min-width: 150px;
+        flex-shrink: 0;
+        text-align: left;
+    }
+    .package-list .pkg-version {
+        min-width: 100px;
+        flex-shrink: 0;
+        text-align: left;
+    }
+    .package-list .pkg-check {
+        min-width: 40px;
+        flex-shrink: 0;
+        text-align: center;
+    }
+    .package-list .pkg-latest {
+        min-width: 100px;
+        flex-shrink: 0;
+        text-align: right;
+    }
     .content-container {
         max-width: 800px;
         margin: 0 auto;
@@ -95,86 +187,205 @@
         height: 700px;
         overflow-y: auto;
     }
+    .pkg-status {
+    min-width: 24px;
+    text-align: center;
+}
     </style>
 </head>
 <body>
     <div class="content-container">
-        <h1>Puller</h1>
+        <h1>Automation</h1>
 
         <div class="button-container">
             <button id="add" class="main-button">➕ 폴더 추가</button>
-            <button id="pull" class="main-button">🔁 전체 Pull</button>
         </div>
 
-        <ul id="folder-list"></ul>
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="tab-btn-pull" data-tab="tab-content-pull">Git Pull</button>
+            <button class="tab-btn" id="tab-btn-pkg" data-tab="tab-content-pkg">Package Manager</button>
+        </div>
 
-        <div id="output"></div>
+        <div class="tab-content active" id="tab-content-pull">
+            <div class="button-container">
+                <button id="pull" class="main-button">🔁 전체 Pull</button>
+            </div>
+            <ul id="folder-list"></ul>
+            <div id="output"></div>
+        </div>
+
+        <div class="tab-content" id="tab-content-pkg">
+            <div class="button-container">
+                <button id="check" class="main-button">🔁 전체 Check</button>
+            </div>
+            <ul id="pkg-list"></ul>
+        </div>
     </div>
     <script>
         const listEl = document.getElementById('folder-list');
+        const pkgListEl = document.getElementById('pkg-list');
         const outputEl = document.getElementById('output');
 
         let folderStatuses = {};
 
-        async function renderList() {
+        async function renderGitPullList() {
             const folders = await window.api.getFolders();
             listEl.innerHTML = '';
             for (const folder of folders) {
-            const li = document.createElement('li');
-            li.className = 'folder-item';
+                const li = document.createElement('li');
+                li.className = 'folder-item';
 
-            const pathSpan = document.createElement('span');
-            pathSpan.className = 'folder-path';
-            pathSpan.textContent = folder;
+                const pathSpan = document.createElement('span');
+                pathSpan.className = 'folder-path';
+                pathSpan.textContent = folder;
 
-            const statusSpan = document.createElement('span');
-            statusSpan.className = 'status-icon';
-            const status = folderStatuses[folder];
-            if (status === 'loading') {
-                statusSpan.textContent = '⏳';
-            } else if (status === 'success') {
-                statusSpan.textContent = '✅';
-            } else if (status === 'fail') {
-                statusSpan.textContent = '❌';
-            } else {
-                statusSpan.textContent = '';
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'status-icon';
+                const status = folderStatuses[folder];
+                if (status === 'loading') {
+                    statusSpan.textContent = '⏳';
+                } else if (status === 'success') {
+                    statusSpan.textContent = '✅';
+                } else if (status === 'fail') {
+                    statusSpan.textContent = '❌';
+                } else {
+                    statusSpan.textContent = '';
+                }
+
+                // 🔄 개별 실행 버튼
+                const pullBtn = document.createElement('button');
+                pullBtn.className = 'action-button';
+                pullBtn.textContent = '🔄';
+                pullBtn.onclick = async () => {
+                    folderStatuses[folder] = 'loading';
+                    renderGitPullList();
+
+                    const result = await window.api.gitPullOne(folder);
+                    folderStatuses[folder] = result.success ? 'success' : 'fail';
+                    renderGitPullList();
+
+                    outputEl.textContent += `📁 ${folder}\n${result.output}\n\n`;
+                };
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'action-button';
+                delBtn.textContent = '🗑️';
+                delBtn.onclick = async () => {
+                    await window.api.removeFolder(folder);
+                    delete folderStatuses[folder];
+                    renderGitPullList();
+                };
+
+                li.appendChild(pathSpan);
+                li.appendChild(statusSpan);
+                li.appendChild(pullBtn);
+                li.appendChild(delBtn);
+                listEl.appendChild(li);
             }
+        }
 
-            // 🔄 개별 실행 버튼
-            const pullBtn = document.createElement('button');
-            pullBtn.className = 'action-button';
-            pullBtn.textContent = '🔄';
-            pullBtn.onclick = async () => {
-                folderStatuses[folder] = 'loading';
-                renderList();
+        async function renderPackageList() {
+            const repoList = await window.pkgapi.detectAll();
+            pkgListEl.innerHTML = '';
+            for (const repo of repoList) {
+                const li = document.createElement('li');
+                li.className = 'package-item';
 
-                const result = await window.api.gitPullOne(folder);
-                folderStatuses[folder] = result.success ? 'success' : 'fail';
-                renderList();
+                const info = document.createElement('div');
+                info.className = 'package-info';
 
-                outputEl.textContent += `📁 ${folder}\n${result.output}\n\n`;
-            };
+                const pathSpan = document.createElement('span');
+                pathSpan.className = 'folder-path';
+                pathSpan.textContent = repo.folder;
 
-            const delBtn = document.createElement('button');
-            delBtn.className = 'action-button';
-            delBtn.textContent = '🗑️';
-            delBtn.onclick = async () => {
-                await window.api.removeFolder(folder);
-                delete folderStatuses[folder];
-                renderList();
-            };
+                const image = document.createElement('img');
+                if (repo.type === 'python') {
+                    image.src = '../assets/python.png';
+                } else if (repo.type === 'node') {
+                    image.src = '../assets/nodejs.png';
+                } else {
+                    image.src = '../assets/unknown.png';
+                }
 
-            li.appendChild(pathSpan);
-            li.appendChild(statusSpan);
-            li.appendChild(pullBtn);
-            li.appendChild(delBtn);
-            listEl.appendChild(li);
+                const delBtn = document.createElement('button');
+                delBtn.className = 'action-button';
+                delBtn.textContent = '🗑️';
+                delBtn.onclick = async () => {
+                    await window.api.removeFolder(folder);
+                    delete folderStatuses[folder];
+                    renderPackageList();
+                };
+
+                // 오른쪽 박스에 image와 delBtn을 묶음
+                const rightBox = document.createElement('div');
+                rightBox.style.display = 'flex';
+                rightBox.style.alignItems = 'center';
+                rightBox.appendChild(image);
+                rightBox.appendChild(delBtn);
+
+                const packageList = document.createElement('ul');
+                packageList.className = 'package-list';
+                for (const pkg of repo.packages) {
+                    const pkgLi = document.createElement('li');
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'pkg-name';
+                    nameSpan.textContent = pkg.name + '  ';
+                    const versionSpan = document.createElement('span');
+                    versionSpan.className = 'pkg-version';
+                    versionSpan.textContent = pkg.version;
+
+                    const checkBtn = document.createElement('button');
+                    checkBtn.className = 'action-button';
+                    checkBtn.textContent = '🔄';
+                    
+                    const latestVersionSpan = document.createElement('span');
+                    latestVersionSpan.className = 'pkg-latest';
+                    latestVersionSpan.style.minWidth = '100px'; // 고정 너비(필요시 조정)
+                    latestVersionSpan.style.textAlign = 'right';
+                    latestVersionSpan.style.marginLeft = '12px';
+
+                    // 상태 아이콘 span 추가
+                    const statusIcon = document.createElement('span');
+                    statusIcon.className = 'pkg-status';
+                    statusIcon.style.marginLeft = '8px';
+
+                    // 버튼 클릭 시
+                    checkBtn.onclick = async () => {
+                        const result = await window.pkgapi.checkLatestPackage(repo.type, pkg.name);
+                        latestVersionSpan.textContent = `${result}`;
+                        const cmp = compareVersions(pkg.version, result);
+                        if (cmp === -1) {
+                            statusIcon.textContent = '⬆️'; // 최신버전이 더 높음
+                            statusIcon.title = '업데이트 필요';
+                        } else if (cmp === 0) {
+                            statusIcon.textContent = '✅'; // 같음
+                            statusIcon.title = '최신 버전';
+                        } else {
+                            statusIcon.textContent = '❓'; // 예외 상황
+                            statusIcon.title = '비교 불가';
+                        }
+                    };
+
+                    pkgLi.appendChild(nameSpan);
+                    pkgLi.appendChild(versionSpan);
+                    pkgLi.appendChild(checkBtn);
+                    pkgLi.appendChild(latestVersionSpan);
+                    pkgLi.appendChild(statusIcon); // 상태 아이콘 추가
+                    packageList.appendChild(pkgLi);
+                }
+
+                info.appendChild(pathSpan);
+                info.appendChild(rightBox);
+                li.appendChild(info);
+                li.appendChild(packageList);
+                pkgListEl.appendChild(li);
             }
         }
 
         document.getElementById('add').onclick = async () => {
             await window.api.addFolder();
-            renderList();
+            renderGitPullList();
         };
 
         document.getElementById('pull').onclick = async () => {
@@ -183,18 +394,80 @@
 
             for (const folder of folders) {
             folderStatuses[folder] = 'loading';
-            renderList();
+            renderGitPullList();
 
             const result = await window.api.gitPullOne(folder);
 
             folderStatuses[folder] = result.success ? 'success' : 'fail';
-            renderList();
+            renderGitPullList();
 
             outputEl.textContent += `📁 ${folder}\n${result.output}\n\n`;
             }
         };
 
-        renderList();
+        document.getElementById('check').onclick = async () => {
+            const repoList = await window.pkgapi.detectAll();
+            const pkgList = pkgListEl.querySelectorAll('.package-item');
+            for (const li of pkgList) {
+                const path = li.querySelector('.folder-path').textContent.trim();
+                const type = repoList.find(repo => repo.folder === path)?.type;
+                const packageList = li.querySelector('.package-list');
+                for (const pkgLi of packageList.querySelectorAll('li')) {
+                    const pkgName = pkgLi.querySelector('.pkg-name').textContent.trim();
+                    const result = await window.pkgapi.checkLatestPackage(type, pkgName);
+                    const latestVersionSpan = pkgLi.querySelector('.pkg-latest');
+                    latestVersionSpan.textContent = `${result}`;
+                    // 상태 아이콘 처리
+                    const versionSpan = pkgLi.querySelector('.pkg-version');
+                    const statusIcon = pkgLi.querySelector('.pkg-status');
+                    if (versionSpan && statusIcon) {
+                        const cmp = compareVersions(versionSpan.textContent.trim(), result);
+                        if (cmp === -1) {
+                            statusIcon.textContent = '⬆️';
+                            statusIcon.title = '업데이트 필요';
+                        } else if (cmp === 0) {
+                            statusIcon.textContent = '✅';
+                            statusIcon.title = '최신 버전';
+                        } else {
+                            statusIcon.textContent = '❓';
+                            statusIcon.title = '비교 불가';
+                        }
+                    }
+                }
+            }
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                btn.classList.add('active');
+                const contentId = btn.dataset.tab;
+                document.getElementById(contentId).classList.add('active');
+
+                if (contentId === 'tab-content-pkg') renderPackageList();
+                else if (contentId === 'tab-content-pull') renderGitPullList();
+            });
+        });
+
+        function normalizeVersion(ver) {
+    // ^, ~, >=, <=, >, <, =, 공백 등 제거
+    return ver.replace(/^[\^~><= ]+/, '');
+}
+
+function compareVersions(current, latest) {
+    const a = normalizeVersion(current).split('.').map(Number);
+    const b = normalizeVersion(latest).split('.').map(Number);
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+        const x = a[i] || 0, y = b[i] || 0;
+        if (x < y) return -1;
+        if (x > y) return 1;
+    }
+    return 0;
+}
+
+        renderGitPullList();
     </script>
 </body>
 </html>
